@@ -5,7 +5,8 @@ import os
 import time
 import json
 import yaml
-
+import numpy as np 
+import scipy.stats as st
 
 def login(spotify_client_id, spotify_client_secret, openai_api_key):
    spotify_credentials = SpotifyClientCredentials(client_id=spotify_client_id, 
@@ -161,3 +162,17 @@ def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model=
   get_and_set_features(spotify_client, recommended_songs)
   recco_target, recco_data, recco_songstr = make_farray(recommended_songs,  "recommended: "+ vibe, features)
   return validated_songs, target, data, songstr, recommended_songs, recco_target, recco_data, recco_songstr
+
+def songs_value_range(songs):
+  f_list = {}
+  for song in songs:
+    if 'features' not in song:
+      continue
+    for f in song['features']:
+      if f not in f_list:
+        f_list[f] = []
+      f_list[f].append(song['features'][f])
+  for f in f_list:
+    data = f_list[f]
+    f_list[f] = np.around(st.t.interval(confidence=0.95, df=len(data)-1, loc=np.mean(data), scale=st.sem(data)), 2)
+  return f_list
