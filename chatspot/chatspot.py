@@ -97,7 +97,7 @@ FEATURES = ['acousticness', 'danceability', 'energy',
             'instrumentalness','loudness', 'valence', 'tempo', 'key']
 
 def get_features():
-   return FEATURES
+  return FEATURES
 
 def make_farray(spotify_client, validated_songs, label, features=FEATURES):
   #sorted(validated_songs2[0]['features'].keys())
