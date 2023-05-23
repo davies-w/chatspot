@@ -99,7 +99,7 @@ FEATURES = ['acousticness', 'danceability', 'energy',
 def get_features():
   return FEATURES
 
-def make_farray(spotify_client, validated_songs, label, features=FEATURES):
+def make_farray(validated_songs, label, features=FEATURES):
   #sorted(validated_songs2[0]['features'].keys())
   feature_list = FEATURES
   target = []
@@ -156,7 +156,7 @@ def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model=
   songs = songs_by_vibe(vibe,model=model)
   validated_songs = lookup_songs(spotify_client, songs)
   get_and_set_features(spotify_client, validated_songs)
-  target, data, songstr = make_farray(spotify_client, validated_songs, vibe, features)
+  target, data, songstr = make_farray(validated_songs, vibe, features)
   recommended_songs = get_recommendations(spotify_client, validated_songs)
   get_and_set_features(spotify_client, recommended_songs)
   recco_target, recco_data, recco_songstr = make_farray(recommended_songs,  "recommended: "+ vibe, features)
