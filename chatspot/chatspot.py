@@ -178,12 +178,14 @@ def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model=
   recco_target, recco_data, recco_songstr = make_farray(recommended_songs,  "recommended: "+ vibe, features)
   return validated_songs, target, data, songstr, recommended_songs, recco_target, recco_data, recco_songstr
 
-def songs_value_range(songs):
+def songs_value_range(songs,ignore = []):
   f_list = {}
   for song in songs:
     if 'features' not in song:
       continue
     for f in song['features']:
+      if f in ignore:
+        continue
       if f not in f_list:
         f_list[f] = []
       f_list[f].append(song['features'][f])
