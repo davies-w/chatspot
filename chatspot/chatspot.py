@@ -153,11 +153,13 @@ def get_recommendations(spotify_client, validated_songs, n=5):
   # and de-dupe?
   return new_songs
 
-def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model="gpt-4"):
+def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model="gpt-4", recommendations=True):
   songs = songs_by_vibe(vibe,model=model)
   validated_songs = lookup_songs(spotify_client, songs)
   get_and_set_features(spotify_client, validated_songs)
   target, data, songstr = make_farray(validated_songs, vibe, features)
+  if not recommendations:
+    return validated_songs, target, data, songstr, [], [], [], []
   recommended_songs = get_recommendations(spotify_client, validated_songs)
   get_and_set_features(spotify_client, recommended_songs)
   recco_target, recco_data, recco_songstr = make_farray(recommended_songs,  "recommended: "+ vibe, features)
