@@ -40,7 +40,20 @@ def user_msg(str):
 
 
 def songs_by_vibe(vibe,  model= "gpt-4"): #"gpt-3.5-turbo" doesnt seem to work well.
-  songs, tokens = chat([system_msg("Always format the result as JSON."), user_msg(f"Give me 10 songs and their artists that have the vibe of {vibe} ")],  model=model)
+  songs, tokens = chat([system_msg("Always format the result as JSON."), user_msg(f"Give me 10 songs and their artists that have the vibe of {vibe}")],  model=model)
+  if model != "gpt-4":
+    print 
+    songlist = []
+    rows = songs.split("\n")
+    for row in rows:
+      parts = row.split("\"")
+      if len(parts) != 3:
+        continue
+      song = {}
+      song['title'] = parts[1]
+      song['artist'] = parts[2][4:]
+      songlist.append(song)
+    return songlist
   try:
     return json.loads(songs)['songs']
   except:
