@@ -7,6 +7,8 @@ import json
 import yaml
 import numpy as np 
 import scipy.stats as st
+import re
+from collections import Counter
 
 def login(spotify_client_id, spotify_client_secret, openai_api_key):
    spotify_credentials = SpotifyClientCredentials(client_id=spotify_client_id, 
@@ -15,13 +17,15 @@ def login(spotify_client_id, spotify_client_secret, openai_api_key):
    openai.api_key = openai_api_key
    return spotify_client
 
-
+CHAT_CACHE = {}
 def chat(messages=[], model="gpt-3.5-turbo"):
    try:
-      response =  openai.ChatCompletion.create(
-      model=model,
-      messages=messages
-      )
+      key = model+str(messages)
+      if key in CHAT_CACHE:
+        response = CHAT_CACHE[key]
+      else:
+        response =  openai.ChatCompletion.create(model=model, messages=messages)
+        CHAT_CACHE[key] = response
       answer = response["choices"][0]["message"]["content"]
       usage = response["usage"]["total_tokens"]
       return answer, usage
@@ -39,6 +43,7 @@ def user_msg(str):
   return  {"role": "user", "content": str}
 
 
+
 def songs_by_vibe(vibe,  model= "gpt-4"): #"gpt-3.5-turbo" doesnt seem to work well.
   songs, tokens = chat([system_msg("Always format the result as JSON."), user_msg(f"Give me 10 songs and their artists that have the vibe of {vibe}")],  model=model)
   if model != "gpt-4":
@@ -51,7 +56,7 @@ def songs_by_vibe(vibe,  model= "gpt-4"): #"gpt-3.5-turbo" doesnt seem to work w
         continue
       song = {}
       song['title'] = parts[1]
-      song['artist'] = parts[2][4:]
+      song['artist'] = re.sub("^ (-|by) ","",parts[2])
       songlist.append(song)
     return songlist
   try:
@@ -87,6 +92,11 @@ def lookup_songs(spotify_client, songs):
       results = spotify_client.search(q, limit=1, offset=0, type='track', market=None)
       song['url'] = results['tracks']['items'][0]['external_urls']
       song['uri'] = results['tracks']['items'][0]['uri']
+      song['artist_uri'] = results['tracks']['items'][0]['artists'][0]['uri']
+      try:
+        song['artist_genres'] = spotify_client.artist(song['artist_uri'])["genres"]
+      except:
+        song['artist_genres'] = []
     except:
       time.sleep(1.0)
     tracks.append(song)
@@ -112,6 +122,12 @@ FEATURES = ['acousticness', 'danceability', 'energy',
 
 def get_features():
   return FEATURES
+
+def make_top_genre_list(validated_songs, n):
+  c = Counter()
+  for s in vs:
+    c.update(Counter(s['artist_genres']))
+  return(c.most_common(n=n))
 
 def make_farray(validated_songs, label, features=FEATURES):
   #sorted(validated_songs2[0]['features'].keys())
