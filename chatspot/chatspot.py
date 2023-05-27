@@ -125,7 +125,7 @@ def get_features():
 
 def make_top_genre_list(validated_songs, n):
   c = Counter()
-  for s in vs:
+  for s in validated_songs:
     c.update(Counter(s['artist_genres']))
   return(c.most_common(n=n))
 
