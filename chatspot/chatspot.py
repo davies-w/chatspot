@@ -20,6 +20,7 @@ from sklearn.decomposition import PCA
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 
+from sklearn.manifold import TSNE
 
 
 def login(spotify_client_id, spotify_client_secret, openai_api_key):
@@ -362,3 +363,51 @@ def pca(list_of_vibe_data):
 
   return fig
  
+#https://www.datatechnotes.com/2020/11/tsne-visualization-example-in-python.html
+#https://distill.pub/2016/misread-tsne/
+def plotTSNE(list_of_vibe_data, perplexity=3):
+  num_of_vibes =  len(list_of_vibe_data)
+  
+  x =[]
+  y = []
+  songnames = []
+  for vibe_data in list_of_vibe_data:
+    y += vibe_data[1] + vibe_data[5]
+    x += vibe_data[2] + vibe_data[6]
+    songnames +=  vibe_data[3] + vibe_data[7]
+  x=np.array(x)
+  y=np.array(y) 
+  songnames=np.array(songnames)
+
+  df = pd.DataFrame(x, columns = chatspot.get_features())
+  df["vibe"] = y
+  df["songnames"] = songnames
+
+
+  #perplexity=3 # expected number of classes basically.
+  tsne = TSNE(n_components=2, n_iter=5000, verbose=0, random_state=123, perplexity=perplexity)
+  z = tsne.fit_transform(x) 
+
+  df["comp-1"] = z[:,0]
+  df["comp-2"] = z[:,1]
+
+  n_colors = len(set(y)) + 1
+  colormap = px.colors.sample_colorscale("rainbow", [n/(n_colors -1) for n in range(n_colors)])[1:]
+
+  title='Spotify Feature T-SNE projection'
+  hover_data={'vibe': False, 'comp-1':False, 'comp-2':False}
+  for f in chatspot.get_features():
+    hover_data[f]=True
+
+  fig = px.scatter(df, hover_name='songnames', hover_data=hover_data, title=title,
+                   x="comp-1", y="comp-2", color='vibe', width=1000, height=800,
+                   color_discrete_sequence=colormap)
+
+  fig.update_layout(title={'font_family': "Arial",
+                           'x':0.45,
+                           'y': 0.92,
+                           'xanchor': 'center' })
+  fig.update_yaxes(tickvals=[], showgrid=False, visible=False)
+  fig.update_xaxes(tickvals=[], showgrid=False, visible=False)
+
+  return fig
