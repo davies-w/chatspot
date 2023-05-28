@@ -123,10 +123,13 @@ FEATURES = ['acousticness', 'danceability', 'energy',
 def get_features():
   return FEATURES
 
-def make_top_genre_list(validated_songs, n):
+def make_top_genre_list(validated_songs, n=-1):
   c = Counter()
   for s in validated_songs:
-    c.update(Counter(s['artist_genres']))
+    if 'artist_genres' in s:
+      c.update(Counter(s['artist_genres']))
+  if n == -1:
+    return c
   return(c.most_common(n=n))
 
 def make_farray(validated_songs, label, features=FEATURES):
