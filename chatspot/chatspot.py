@@ -266,7 +266,7 @@ def pca(list_of_vibe_data):
   xvector = pca_model.components_[0] * max(T2[:,0])
   yvector = pca_model.components_[1] * max(T2[:,1])
 
-  df = pd.DataFrame(x, columns = chatspot.get_features())
+  df = pd.DataFrame(x, columns = get_features())
   df["vibe"] = y
   df["songnames"] = songnames
   df["comp-1"] = T2[:, 0]
@@ -308,7 +308,7 @@ def pca(list_of_vibe_data):
 
   title='Spotify Feature PCA projection'
   hover_data={'vibe': False, 'comp-1':False, 'comp-2':False}
-  for f in chatspot.get_features():
+  for f in get_features():
     hover_data[f]=True
 
   fig = px.scatter(df, hover_name='songnames', hover_data=hover_data, title=title,
@@ -328,7 +328,7 @@ def pca(list_of_vibe_data):
   fig.update_xaxes(tickvals=[], showgrid=False, visible=False)
 
   dim_sizes = []
-  for i in range(len(chatspot.get_features())):
+  for i in range(len(get_features())):
     dim_sizes.append(math.sqrt(pow(xvector[i],2) + pow(yvector[i],2)))
     dim_sizes = sorted(dim_sizes, reverse=True)
   third = dim_sizes[3]
@@ -336,7 +336,7 @@ def pca(list_of_vibe_data):
   arrowsize = 1
   arrowhead = 1
   arrowscale = 1
-  for i, feature in enumerate(chatspot.get_features()):
+  for i, feature in enumerate(get_features()):
         if math.sqrt(pow(xvector[i],2) + pow(yvector[i],2)) < third:
           continue
         fig.add_annotation(
@@ -379,7 +379,7 @@ def plotTSNE(list_of_vibe_data, perplexity=3):
   y=np.array(y) 
   songnames=np.array(songnames)
 
-  df = pd.DataFrame(x, columns = chatspot.get_features())
+  df = pd.DataFrame(x, columns = get_features())
   df["vibe"] = y
   df["songnames"] = songnames
 
@@ -396,7 +396,7 @@ def plotTSNE(list_of_vibe_data, perplexity=3):
 
   title='Spotify Feature T-SNE projection'
   hover_data={'vibe': False, 'comp-1':False, 'comp-2':False}
-  for f in chatspot.get_features():
+  for f in get_features():
     hover_data[f]=True
 
   fig = px.scatter(df, hover_name='songnames', hover_data=hover_data, title=title,
