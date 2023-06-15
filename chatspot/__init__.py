@@ -7,3 +7,5 @@ from chatspot.chatspot import plotTSNE
 from chatspot.chatspot import pca
 from chatspot.chatspot import get_recommendations_constrained_by_one_song
 from chatspot.chatspot import lookup_songs_by_id
+from chatspot.chatspot import lookup_songs
+from chatspot.chatspot import songs_by_vibe
