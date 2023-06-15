@@ -104,37 +104,17 @@ def lookup_songs(spotify_client, songs):
     song['uri'] = "NOTFOUND"
     try:
       results = spotify_client.search(q, limit=1, offset=0, type='track', market=None)
-      uri = results['tracks']['items'][0]['uri']
+      song['url'] = results['tracks']['items'][0]['external_urls']
+      song['uri'] = results['tracks']['items'][0]['uri']
+      song['artist_uri'] = results['tracks']['items'][0]['artists'][0]['uri']
       try:
-        song = lookup_songs_by_id(spotify_client,[uri])[0]
+        song['artist_genres'] = spotify_client.artist(song['artist_uri'])["genres"]
       except:
-        time.sleep(1.0)
+        song['artist_genres'] = []
     except:
       time.sleep(1.0)
     tracks.append(song)
   return tracks
-
-
-def lookup_songs_by_id(spotify_client, ids):
-  tracks = []
-  for id in ids:
-    try:
-      song = {}
-      track = spotify_client.track(id)
-      tracks.append({
-           'title': track['name'],
-           'artist': track['artists'][0]['name'],
-           'url' : track['external_urls'],
-           'uri' : track['uri'],
-           'artist_uri': track['artists'][0]['uri'],
-           'artist_genres': spotify_client.artist(track['artists'][0]['uri'])["genres"],
-           'analysis': spotify_client.audio_analysis(track['uri']) ,
-           'isrc' : track['external_ids']['isrc']})
-    except:
-      time.sleep(1.0)
-  get_and_set_features(spotify_client, tracks)
-  return tracks
-
 
 def get_and_set_features(spotify_client, songs):
   track_uris = [song['uri'] for song in songs]
@@ -192,7 +172,6 @@ def print_songs(validated_songs):
     except:
       print(f"[{song['title']}] BY [{song['artist']}] - some data missing from spotify")
 
-
 def get_recommendations_one_shot(spotify_client, validated_songs):
   track_uris = [song['uri'] for song in validated_songs if song['uri'] != 'NOTFOUND']
   reccos=spotify_client.recommendations(seed_tracks=track_uris[0:5], limit=50)
@@ -205,39 +184,25 @@ def get_recommendations_one_shot(spotify_client, validated_songs):
            'uri' : track['uri']})
   return new_songs
 
-
-def get_recommendations_constrained_by_one_song(spotify_client, song, tempo_percentage=0.05, key_percentage=0.1, n=5):
-  if song['uri'] == 'NOTFOUND':
-    return []
-  track_uri = song['uri'] 
-  genres = song['artist_genres']
-  tempo = song['analysis']['track']['tempo']
-  key = song['analysis']['track']['key']
-  reccos=spotify_client.recommendations(seed_tracks=[track_uri], 
-                                        seed_genres=genres[0:4],
-                                        limit=n,
-                                        target_tempo=tempo, min_tempo=tempo*(1-tempo_percentage), max_tempo=tempo*(1+tempo_percentage), 
-                                        target_key=key, min_key=int(key*(1-key_percentage)), max_key=int(key*(1+key_percentage)))
- 
-  new_songs = lookup_songs_by_id(spotify_client, [track['uri'] for track in reccos['tracks']])
-  return new_songs
-
-
 #use permutations?
 def get_recommendations(spotify_client, validated_songs, n=5):
   new_songs = []
   track_uris = [song['uri'] for song in validated_songs if song['uri'] != 'NOTFOUND']
   for track in track_uris:
     reccos=spotify_client.recommendations(seed_tracks=[track], limit=n)
-    songs = lookup_songs_by_id(spotify_client, [track['uri'] for track in reccos['tracks']])
-    new_songs += songs
+    for track in reccos['tracks']:
+      new_songs.append({
+           'title': track['name'],
+           'artist': track['artists'][0]['name'],
+           'url' : track['external_urls'],
+           'uri' : track['uri']})
   # and de-dupe?
   return new_songs
-
 
 def get_recommendations_by_vibe(spotify_client, vibe,  features=FEATURES, model="gpt-4", recommendations=True):
   songs = songs_by_vibe(vibe,model=model)
   validated_songs = lookup_songs(spotify_client, songs)
+  get_and_set_features(spotify_client, validated_songs)
   target, data, songstr = make_farray(validated_songs, vibe, features)
   if not recommendations:
     return validated_songs, target, data, songstr, [], [], [], []
