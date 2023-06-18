@@ -28,7 +28,7 @@ setup(
         url='git@github.com:davies-w/chatspot.git',
         author='Winton Davies',
         author_email='wdavies@cs.stanford.edu',
-        install_requires=["openai", "spotipy"],
+        install_requires=["openai", "spotipy", "pyyaml"],
         packages=['chatspot'],
         zip_safe=True
     )
